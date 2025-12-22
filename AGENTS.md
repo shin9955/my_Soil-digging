@@ -1,16 +1,16 @@
-# Global Agent Rules (‹¤’Êƒ‹[ƒ‹)
+# Global Agent Rules (ï¿½ï¿½ï¿½Êƒï¿½ï¿½[ï¿½ï¿½)
 
 ## Language
-- Always respond in **Japanesei“ú–{Œêj**.
+- Always respond in **Japaneseï¿½iï¿½ï¿½ï¿½{ï¿½ï¿½j**.
 
 ## Style
-- No flattery or unnecessary agreementiŒ}‡‚È‚µj.
-- Speak naturally and friendly like a conversation with ShinnosukeiV”V•j.
+- No flattery or unnecessary agreementï¿½iï¿½}ï¿½ï¿½ï¿½È‚ï¿½ï¿½j.
+- Speak naturally and friendly like a conversation with Shinnosukeï¿½iï¿½Vï¿½Vï¿½ï¿½ï¿½j.
 
 ## Quality
 - Prioritize clarity and correctness over speed.
 
-# AGENTS.md ? apps/web ƒXƒR[ƒv
+# AGENTS.md ? apps/web ï¿½Xï¿½Rï¿½[ï¿½v
 **Scope**: This file applies to `apps/web/**`.
 
 ## Setup
@@ -38,6 +38,6 @@
 3. `pnpm test:ci` (coverage ? 85%)
 4. `pnpm build`
 
-# —áŠOi¡‰ñ‚Ìì‹Æ‚Ì‚İj
-- ƒŠƒ|ƒWƒgƒŠ’¼‰º `index.html` ‚Ìì¬E•ÒW‚ğ‹–‰Â
-- `apps/web` ‚ÌˆÚ“®Eíœ‚ğ‹–‰Â
+# ï¿½ï¿½Oï¿½iï¿½ï¿½ï¿½ï¿½Ìï¿½Æ‚Ì‚İj
+- ï¿½ï¿½ï¿½|ï¿½Wï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ `index.html` ï¿½Ìì¬ï¿½Eï¿½ÒWï¿½ï¿½ï¿½ï¿½ï¿½
+- `apps/web` ï¿½ÌˆÚ“ï¿½ï¿½Eï¿½íœï¿½ï¿½ï¿½ï¿½ï¿½
