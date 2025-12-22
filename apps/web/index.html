@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>土ひろい10分ゲーム</title>
+    <style>
+      :root {
+        --ink: #2b1f17;
+        --ink-soft: #5a4333;
+        --paper: #fff7ea;
+        --paper-strong: #f3d9be;
+        --accent: #f4a259;
+        --accent-strong: #e07a3f;
+        --grass: #8cc07b;
+        --soil-dark: #6b3e22;
+        --soil-mid: #8a5631;
+        --soil-light: #b57a49;
+        --shadow: rgba(43, 31, 23, 0.2);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Gill Sans", "Optima", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(1200px 700px at 10% -10%, #fff6e9 0%, #f3d9be 50%, #ddb089 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        padding: 24px;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, transparent 0);
+        background-size: 18px 18px;
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      .app {
+        width: min(1100px, 100%);
+        display: grid;
+        gap: 20px;
+      }
+
+      .hero {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 40px);
+        letter-spacing: 0.04em;
+      }
+
+      .hero p {
+        margin: 6px 0 0;
+        color: var(--ink-soft);
+        max-width: 560px;
+      }
+
+      .badge {
+        background: linear-gradient(140deg, var(--accent), var(--accent-strong));
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-weight: 700;
+        box-shadow: 0 10px 20px rgba(224, 122, 63, 0.3);
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: 0 12px 30px var(--shadow);
+        display: grid;
+        gap: 18px;
+        backdrop-filter: blur(6px);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        background: var(--paper);
+        border-radius: 14px;
+        padding: 12px 14px;
+        display: grid;
+        gap: 6px;
+        box-shadow: inset 0 0 0 1px rgba(90, 67, 51, 0.1);
+      }
+
+      .stat span {
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+      }
+
+      .control-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        color: var(--ink-soft);
+      }
+
+      input[type="number"] {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(90, 67, 51, 0.2);
+        font-size: 16px;
+        background: #fff;
+      }
+
+      fieldset {
+        border: 1px solid rgba(90, 67, 51, 0.2);
+        border-radius: 12px;
+        padding: 10px 12px 12px;
+      }
+
+      legend {
+        padding: 0 6px;
+        font-weight: 700;
+        color: var(--ink-soft);
+      }
+
+      .difficulty {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .difficulty label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        box-shadow: none;
+      }
+
+      .btn-start {
+        background: linear-gradient(130deg, #f4a259, #f26c4f);
+        color: #fff;
+        box-shadow: 0 12px 20px rgba(242, 108, 79, 0.25);
+      }
+
+      .btn-reset {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: inset 0 0 0 2px rgba(90, 67, 51, 0.15);
+      }
+
+      .btn-start:active,
+      .btn-reset:active {
+        transform: translateY(2px);
+      }
+
+      .tuning {
+        font-size: 13px;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      .field-wrap {
+        position: relative;
+        border-radius: 26px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #caa27e 0%, #b3825f 60%, #8a6043 100%);
+        box-shadow: 0 20px 40px rgba(43, 31, 23, 0.3);
+        height: 60vh;
+        min-height: 320px;
+        max-height: 520px;
+      }
+
+      #field {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .soil {
+        position: absolute;
+        width: var(--size);
+        height: var(--size);
+        border-radius: 48% 48% 42% 42%;
+        border: none;
+        background: radial-gradient(circle at 30% 25%, var(--soil-light), var(--soil-mid) 45%, var(--soil-dark) 80%);
+        box-shadow: 0 8px 0 #5a341c, 0 14px 20px rgba(0, 0, 0, 0.22);
+        color: #2a160d;
+        font-weight: 900;
+        font-size: calc(var(--size) * 0.45);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        animation: popIn 140ms ease-out;
+        touch-action: none;
+      }
+
+      .soil:active {
+        transform: scale(0.96);
+      }
+
+      .soil-picked {
+        animation: popOut 200ms ease-in forwards;
+      }
+
+      .soil-missed {
+        animation: sink 220ms ease-in forwards;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(26, 18, 12, 0.55);
+        display: grid;
+        place-items: center;
+        text-align: center;
+        padding: 24px;
+        z-index: 2;
+      }
+
+      .overlay[hidden] {
+        display: none;
+      }
+
+      .result {
+        background: #fff6ea;
+        border-radius: 20px;
+        padding: 20px 26px;
+        max-width: 360px;
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25);
+        display: grid;
+        gap: 10px;
+      }
+
+      .result h2 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        min-height: 34px;
+      }
+
+      .result p {
+        margin: 0;
+        color: var(--ink-soft);
+      }
+
+      .hint {
+        font-weight: 600;
+      }
+
+      .overlay-start {
+        width: 100%;
+      }
+
+      @keyframes popIn {
+        from {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes popOut {
+        to {
+          transform: scale(1.2);
+          opacity: 0;
+        }
+      }
+
+      @keyframes sink {
+        to {
+          transform: translateY(12px) scale(0.65);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 720px) {
+        body {
+          padding: 16px;
+        }
+
+        .panel {
+          padding: 16px;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <div>
+          <h1>土ひろい10分ゲーム</h1>
+          <p>ランダムに出てくる土をタップして集めよう。時間内に目標スコア以上で勝ち！</p>
+        </div>
+        <div class="badge">10分チャレンジ</div>
+      </header>
+
+      <section class="panel">
+        <div class="stats">
+          <div class="stat">
+            残り時間
+            <span id="time">01:00</span>
+          </div>
+          <div class="stat">
+            スコア
+            <span id="score">0</span>
+          </div>
+          <div class="stat">
+            目標
+            <span id="targetDisplay">--</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="control-row">
+            <label>
+              制限時間（分）
+              <input id="minutes" type="number" min="1" max="30" step="1" value="1" />
+            </label>
+            <label>
+              目標スコア
+              <input id="targetInput" type="number" min="1" max="999" step="1" value="18" />
+            </label>
+          </div>
+
+          <fieldset>
+            <legend>難易度</legend>
+            <div class="difficulty">
+              <label><input type="radio" name="difficulty" value="easy" /> かんたん</label>
+              <label><input type="radio" name="difficulty" value="normal" checked /> ふつう</label>
+              <label><input type="radio" name="difficulty" value="hard" /> むずい</label>
+            </div>
+          </fieldset>
+
+          <p class="tuning" id="tuningInfo">出現間隔: -- / 生存時間: -- / 同時上限: --</p>
+
+          <div class="buttons">
+            <button class="btn-start" id="startBtn" type="button">Start</button>
+            <button class="btn-reset" id="resetBtn" type="button">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="field-wrap" aria-live="polite">
+        <div id="field"></div>
+        <div class="overlay" id="overlay">
+          <div class="result">
+            <h2 id="resultTitle"></h2>
+            <p id="resultDetail"></p>
+            <p class="hint" id="hint">Startを押して開始</p>
+            <button class="btn-start overlay-start" id="overlayStartBtn" type="button">Start</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const timeEl = document.getElementById("time");
+      const scoreEl = document.getElementById("score");
+      const targetDisplayEl = document.getElementById("targetDisplay");
+      const minutesInput = document.getElementById("minutes");
+      const targetInput = document.getElementById("targetInput");
+      const startBtn = document.getElementById("startBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const field = document.getElementById("field");
+      const overlay = document.getElementById("overlay");
+      const resultTitle = document.getElementById("resultTitle");
+      const resultDetail = document.getElementById("resultDetail");
+      const hintEl = document.getElementById("hint");
+      const overlayStartBtn = document.getElementById("overlayStartBtn");
+      const tuningInfo = document.getElementById("tuningInfo");
+      const difficultyInputs = Array.from(document.querySelectorAll('input[name="difficulty"]'));
+
+      const difficultyPresets = {
+        easy: { spawnEveryMs: 950, ttlMs: 2400, target: 12 },
+        normal: { spawnEveryMs: 700, ttlMs: 1600, target: 18 },
+        hard: { spawnEveryMs: 520, ttlMs: 1200, target: 26 },
+      };
+
+      const tuning = {
+        maxOnScreen: 6,
+      };
+
+      const config = {
+        spawnEveryMs: difficultyPresets.normal.spawnEveryMs,
+        ttlMs: difficultyPresets.normal.ttlMs,
+        maxOnScreen: tuning.maxOnScreen,
+      };
+
+      const bgmSequence = [
+        { freq: 523.25, length: 0.16 },
+        { freq: 659.25, length: 0.16 },
+        { freq: 783.99, length: 0.16 },
+        { freq: 659.25, length: 0.16 },
+        { freq: 523.25, length: 0.16 },
+        { freq: 587.33, length: 0.16 },
+        { freq: 698.46, length: 0.16 },
+        { freq: 587.33, length: 0.16 },
+        { freq: 659.25, length: 0.16 },
+        { freq: 783.99, length: 0.16 },
+        { freq: 880.0, length: 0.16 },
+        { freq: 783.99, length: 0.16 },
+        { freq: 659.25, length: 0.16 },
+        { freq: 698.46, length: 0.16 },
+        { freq: 783.99, length: 0.16 },
+        { freq: 698.46, length: 0.16 },
+      ];
+      const bgmLookaheadMs = 120;
+      const bgmScheduleAheadTime = 0.6;
+      const bgmState = {
+        isPlaying: false,
+        schedulerId: null,
+        nextNoteTime: 0,
+        stepIndex: 0,
+      };
+      let audioContext = null;
+      let bgmMasterGain = null;
+
+      let running = false;
+      let score = 0;
+      let targetScore = difficultyPresets.normal.target;
+      let timeLimitMs = 1 * 60 * 1000;
+      let endTime = 0;
+      let spawnTimerId = null;
+      let countdownTimerId = null;
+      let soilCounter = 0;
+      const soils = new Map();
+
+      const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
+
+      const ensureAudioContext = () => {
+        if (!audioContext) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioContext = new AudioContextClass();
+          bgmMasterGain = audioContext.createGain();
+          bgmMasterGain.gain.value = 0.16;
+          bgmMasterGain.connect(audioContext.destination);
+        }
+        return audioContext;
+      };
+
+      const playBgmTone = (frequency, startTime, duration) => {
+        if (!frequency || !audioContext || !bgmMasterGain) return;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(frequency, startTime);
+        gain.gain.setValueAtTime(0.0001, startTime);
+        gain.gain.linearRampToValueAtTime(0.12, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(bgmMasterGain);
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.05);
+      };
+
+      const scheduleBgm = () => {
+        if (!audioContext || !bgmState.isPlaying) return;
+        const now = audioContext.currentTime;
+        while (bgmState.nextNoteTime < now + bgmScheduleAheadTime) {
+          const step = bgmSequence[bgmState.stepIndex];
+          playBgmTone(step.freq, bgmState.nextNoteTime, step.length);
+          bgmState.nextNoteTime += step.length;
+          bgmState.stepIndex = (bgmState.stepIndex + 1) % bgmSequence.length;
+        }
+      };
+
+      const startBgm = () => {
+        const ctx = ensureAudioContext();
+        if (ctx.state === "suspended") {
+          ctx.resume();
+        }
+        if (bgmState.isPlaying) return;
+        bgmState.isPlaying = true;
+        bgmState.stepIndex = 0;
+        bgmState.nextNoteTime = ctx.currentTime + 0.05;
+        bgmState.schedulerId = setInterval(scheduleBgm, bgmLookaheadMs);
+      };
+
+      const stopBgm = () => {
+        if (!bgmState.isPlaying) return;
+        bgmState.isPlaying = false;
+        clearInterval(bgmState.schedulerId);
+        bgmState.schedulerId = null;
+      };
+
+      const formatTime = (ms) => {
+        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      };
+
+      const updateTimeDisplay = (ms) => {
+        timeEl.textContent = formatTime(ms);
+      };
+
+      const updateScoreDisplay = () => {
+        scoreEl.textContent = score;
+      };
+
+      const updateTargetDisplay = () => {
+        targetDisplayEl.textContent = targetScore;
+      };
+
+      const updateTuningInfo = () => {
+        tuningInfo.textContent = `出現間隔: ${config.spawnEveryMs}ms / 生存時間: ${config.ttlMs}ms / 同時上限: ${config.maxOnScreen}`;
+      };
+
+      const setOverlayState = (state) => {
+        if (state === "running") {
+          overlay.hidden = true;
+          return;
+        }
+
+        overlay.hidden = false;
+        overlayStartBtn.hidden = false;
+        overlayStartBtn.disabled = false;
+
+        if (state === "idle") {
+          resultTitle.textContent = "";
+          resultDetail.textContent = "";
+          hintEl.textContent = "Startを押して開始";
+          hintEl.hidden = false;
+          overlayStartBtn.textContent = "Start";
+          return;
+        }
+
+        if (state === "result") {
+          hintEl.hidden = true;
+          overlayStartBtn.textContent = "もう一度Start";
+        }
+      };
+
+      const setControlsEnabled = (enabled) => {
+        minutesInput.disabled = !enabled;
+        targetInput.disabled = !enabled;
+        difficultyInputs.forEach((input) => {
+          input.disabled = !enabled;
+        });
+        startBtn.disabled = !enabled;
+      };
+
+      const clearAllSoils = () => {
+        soils.forEach((soil) => {
+          clearTimeout(soil.timeoutId);
+          soil.element.remove();
+        });
+        soils.clear();
+      };
+
+      const readSettings = () => {
+        const minutes = clampNumber(Number(minutesInput.value) || 1, 1, 30);
+        timeLimitMs = minutes * 60 * 1000;
+        const target = clampNumber(Number(targetInput.value) || 1, 1, 999);
+        targetScore = target;
+        updateTargetDisplay();
+      };
+
+      const applyDifficulty = (level, syncInput = true) => {
+        const preset = difficultyPresets[level];
+        if (!preset) return;
+        config.spawnEveryMs = preset.spawnEveryMs;
+        config.ttlMs = preset.ttlMs;
+        if (syncInput) {
+          targetInput.value = preset.target;
+        }
+        targetScore = Number(targetInput.value) || preset.target;
+        updateTargetDisplay();
+        updateTuningInfo();
+      };
+
+      const removeSoil = (id, reason) => {
+        const entry = soils.get(id);
+        if (!entry) return;
+        clearTimeout(entry.timeoutId);
+        soils.delete(id);
+        const el = entry.element;
+        el.disabled = true;
+        el.style.pointerEvents = "none";
+        el.classList.add(reason === "picked" ? "soil-picked" : "soil-missed");
+        const delay = reason === "picked" ? 180 : 220;
+        setTimeout(() => el.remove(), delay);
+      };
+
+      const pickSoil = (id) => {
+        if (!running) return;
+        const entry = soils.get(id);
+        if (!entry) return;
+        score += 1;
+        updateScoreDisplay();
+        removeSoil(id, "picked");
+      };
+
+      const getFieldBounds = () => {
+        const rect = field.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) return rect;
+        const parentRect = field.parentElement?.getBoundingClientRect();
+        return parentRect ?? rect;
+      };
+
+      const spawnSoil = () => {
+        if (!running) return;
+        if (soils.size >= config.maxOnScreen) return;
+        const rect = getFieldBounds();
+        const size = clampNumber(Math.round(44 + Math.random() * 34), 44, 78);
+        if (rect.width < size || rect.height < size) return;
+        const maxX = Math.max(0, rect.width - size);
+        const maxY = Math.max(0, rect.height - size);
+        const x = Math.random() * maxX;
+        const y = Math.random() * maxY;
+
+        const soil = document.createElement("button");
+        soil.type = "button";
+        soil.className = "soil";
+        soil.style.setProperty("--size", `${size}px`);
+        soil.style.left = `${x}px`;
+        soil.style.top = `${y}px`;
+        soil.textContent = "土";
+        soil.setAttribute("aria-label", "土を拾う");
+
+        const id = ++soilCounter;
+        const timeoutId = setTimeout(() => removeSoil(id, "missed"), config.ttlMs);
+        soils.set(id, { element: soil, timeoutId });
+
+        soil.addEventListener(
+          "pointerdown",
+          (event) => {
+            event.preventDefault();
+            pickSoil(id);
+          },
+          { passive: false }
+        );
+
+        field.appendChild(soil);
+      };
+
+      const showResult = () => {
+        const win = score >= targetScore;
+        resultTitle.textContent = win ? "勝ち！" : "負け…";
+        resultDetail.textContent = `スコア ${score} / 目標 ${targetScore}`;
+        setOverlayState("result");
+      };
+
+      const startGame = () => {
+        if (running) return;
+        running = true;
+        score = 0;
+        soilCounter = 0;
+        clearAllSoils();
+        readSettings();
+        updateScoreDisplay();
+        updateTimeDisplay(timeLimitMs);
+        setOverlayState("running");
+        setControlsEnabled(false);
+        startBgm();
+        endTime = performance.now() + timeLimitMs;
+
+        countdownTimerId = setInterval(() => {
+          const remaining = endTime - performance.now();
+          if (remaining <= 0) {
+            updateTimeDisplay(0);
+            endGame();
+            return;
+          }
+          updateTimeDisplay(remaining);
+        }, 200);
+
+        spawnSoil();
+        spawnTimerId = setInterval(spawnSoil, config.spawnEveryMs);
+      };
+
+      const endGame = () => {
+        if (!running) return;
+        running = false;
+        clearInterval(spawnTimerId);
+        clearInterval(countdownTimerId);
+        spawnTimerId = null;
+        countdownTimerId = null;
+        clearAllSoils();
+        stopBgm();
+        setControlsEnabled(true);
+        showResult();
+      };
+
+      const resetGame = () => {
+        running = false;
+        clearInterval(spawnTimerId);
+        clearInterval(countdownTimerId);
+        spawnTimerId = null;
+        countdownTimerId = null;
+        clearAllSoils();
+        stopBgm();
+        score = 0;
+        readSettings();
+        updateScoreDisplay();
+        updateTimeDisplay(timeLimitMs);
+        setOverlayState("idle");
+        setControlsEnabled(true);
+      };
+
+      minutesInput.addEventListener("input", () => {
+        if (running) return;
+        readSettings();
+        updateTimeDisplay(timeLimitMs);
+      });
+
+      targetInput.addEventListener("input", () => {
+        if (running) return;
+        readSettings();
+        updateTargetDisplay();
+      });
+
+      difficultyInputs.forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) {
+            applyDifficulty(input.value);
+            if (!running) {
+              readSettings();
+              updateTargetDisplay();
+            }
+          }
+        });
+      });
+
+      startBtn.addEventListener("click", startGame);
+      resetBtn.addEventListener("click", resetGame);
+      overlayStartBtn.addEventListener("click", startGame);
+
+      applyDifficulty("normal", false);
+      updateScoreDisplay();
+      readSettings();
+      updateTimeDisplay(timeLimitMs);
+      updateTuningInfo();
+      setOverlayState("idle");
+    </script>
+  </body>
+</html>
