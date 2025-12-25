@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>土ひろい10分ゲーム</title>
+    <title>土ひろい10秒ゲーム</title>
     <style>
       :root {
         --ink: #2b1f17;
@@ -162,6 +162,32 @@
         color: var(--ink);
       }
 
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--ink-soft);
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 10px;
+        box-shadow: inset 0 0 0 1px rgba(90, 67, 51, 0.15);
+      }
+
+      .legend-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--legend-color, var(--soil-light));
+        box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.15);
+      }
+
       .buttons {
         display: flex;
         gap: 12px;
@@ -226,26 +252,96 @@
         user-select: none;
       }
 
+      .basket {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        width: 160px;
+        height: 120px;
+        border-radius: 22px 22px 28px 28px;
+        background: linear-gradient(180deg, #f4c992 0%, #d49a5f 70%, #b6783e 100%);
+        border: 3px solid #8a5a36;
+        box-shadow: 0 14px 24px rgba(0, 0, 0, 0.2);
+        display: grid;
+        place-items: center;
+        color: #4a2c16;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .basket::before {
+        content: "";
+        position: absolute;
+        top: -12px;
+        left: 8px;
+        right: 8px;
+        height: 22px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #f9ddb4 0%, #e2b57d 100%);
+        border: 2px solid #8a5a36;
+        box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+      }
+
+      .basket::after {
+        content: "";
+        position: absolute;
+        inset: 18px 10px 12px;
+        border-radius: 12px 12px 18px 18px;
+        background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0 14px, transparent 14px 28px),
+          linear-gradient(180deg, rgba(90, 50, 25, 0.2) 0 8px, transparent 8px 16px);
+        background-size: 28px 100%, 100% 16px;
+        opacity: 0.65;
+        pointer-events: none;
+      }
+
+      .basket-active {
+        box-shadow: 0 0 0 4px rgba(244, 162, 89, 0.6), 0 14px 24px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px) scale(1.02);
+      }
+
       .soil {
         position: absolute;
         width: var(--size);
         height: var(--size);
-        border-radius: 48% 48% 42% 42%;
+        border-radius: 6px;
         border: none;
-        background: radial-gradient(circle at 30% 25%, var(--soil-light), var(--soil-mid) 45%, var(--soil-dark) 80%);
-        box-shadow: 0 8px 0 #5a341c, 0 14px 20px rgba(0, 0, 0, 0.22);
-        color: #2a160d;
-        font-weight: 900;
-        font-size: calc(var(--size) * 0.45);
+        background-color: var(--soil-mid);
+        background-image: repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.06) 0,
+            rgba(255, 255, 255, 0.06) 6px,
+            rgba(0, 0, 0, 0.08) 6px,
+            rgba(0, 0, 0, 0.08) 12px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.04) 0,
+            rgba(255, 255, 255, 0.04) 6px,
+            rgba(0, 0, 0, 0.1) 6px,
+            rgba(0, 0, 0, 0.1) 12px
+          ),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.15), transparent 40%),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.2), transparent 45%);
+        box-shadow: 0 4px 0 #4f2a12, 0 10px 18px rgba(0, 0, 0, 0.28);
         display: grid;
         place-items: center;
-        cursor: pointer;
+        cursor: grab;
         animation: popIn 140ms ease-out;
         touch-action: none;
+        user-select: none;
       }
 
       .soil:active {
-        transform: scale(0.96);
+        cursor: grabbing;
+      }
+
+      .soil-dragging {
+        transform: scale(1.06);
+        box-shadow: 0 10px 0 #5a341c, 0 20px 30px rgba(0, 0, 0, 0.3);
+        z-index: 2;
       }
 
       .soil-picked {
@@ -337,6 +433,14 @@
         button {
           width: 100%;
         }
+
+        .basket {
+          width: 130px;
+          height: 100px;
+          right: 12px;
+          bottom: 12px;
+          font-size: 14px;
+        }
       }
     </style>
   </head>
@@ -344,10 +448,10 @@
     <main class="app">
       <header class="hero">
         <div>
-          <h1>土ひろい10分ゲーム</h1>
-          <p>ランダムに出てくる土をタップして集めよう。時間内に目標スコア以上で勝ち！</p>
+          <h1>土ひろい10秒ゲーム</h1>
+          <p>ランダムに出てくる土をドラッグしてカゴに入れよう。配点が高い土ほど早く消える！</p>
         </div>
-        <div class="badge">10分チャレンジ</div>
+        <div class="badge">10秒チャレンジ</div>
       </header>
 
       <section class="panel">
@@ -387,7 +491,14 @@
             </div>
           </fieldset>
 
-          <p class="tuning" id="tuningInfo">出現間隔: -- / 生存時間: -- / 同時上限: --</p>
+          <div class="legend" aria-label="土の配点">
+            <div class="legend-item"><span class="legend-dot" style="--legend-color: #c7a070"></span>1点</div>
+            <div class="legend-item"><span class="legend-dot" style="--legend-color: #b37a4a"></span>2点</div>
+            <div class="legend-item"><span class="legend-dot" style="--legend-color: #9a5c32"></span>3点</div>
+            <div class="legend-item"><span class="legend-dot" style="--legend-color: #7f3f1f"></span>5点</div>
+          </div>
+
+          <p class="tuning" id="tuningInfo">出現間隔: -- / 基本生存時間: -- / 同時上限: --</p>
 
           <div class="buttons">
             <button class="btn-start" id="startBtn" type="button">Start</button>
@@ -397,7 +508,9 @@
       </section>
 
       <section class="field-wrap" aria-live="polite">
-        <div id="field"></div>
+        <div id="field">
+          <div class="basket" id="basket">BASKET</div>
+        </div>
         <div class="overlay" id="overlay">
           <div class="result">
             <h2 id="resultTitle"></h2>
@@ -418,6 +531,7 @@
       const startBtn = document.getElementById("startBtn");
       const resetBtn = document.getElementById("resetBtn");
       const field = document.getElementById("field");
+      const basket = document.getElementById("basket");
       const overlay = document.getElementById("overlay");
       const resultTitle = document.getElementById("resultTitle");
       const resultDetail = document.getElementById("resultDetail");
@@ -431,6 +545,37 @@
         normal: { spawnEveryMs: 700, ttlMs: 1600, target: 18 },
         hard: { spawnEveryMs: 520, ttlMs: 1200, target: 26 },
       };
+
+      const soilTypes = [
+        {
+          id: "common",
+          points: 1,
+          ttlFactor: 1.4,
+          weight: 45,
+          colors: { light: "#d4ae7f", mid: "#b17b4d", dark: "#8b5a33" },
+        },
+        {
+          id: "good",
+          points: 2,
+          ttlFactor: 1.1,
+          weight: 30,
+          colors: { light: "#c6935e", mid: "#a0663b", dark: "#7a4a28" },
+        },
+        {
+          id: "rare",
+          points: 3,
+          ttlFactor: 0.85,
+          weight: 18,
+          colors: { light: "#b67b4c", mid: "#8f5431", dark: "#6b3a1f" },
+        },
+        {
+          id: "legend",
+          points: 5,
+          ttlFactor: 0.65,
+          weight: 7,
+          colors: { light: "#a9663f", mid: "#7a3e20", dark: "#4e240f" },
+        },
+      ];
 
       const tuning = {
         maxOnScreen: 6,
@@ -480,6 +625,12 @@
       let countdownTimerId = null;
       let soilCounter = 0;
       const soils = new Map();
+      const dragState = {
+        id: null,
+        pointerId: null,
+        offsetX: 0,
+        offsetY: 0,
+      };
 
       const clampNumber = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -559,7 +710,7 @@
       };
 
       const updateTuningInfo = () => {
-        tuningInfo.textContent = `出現間隔: ${config.spawnEveryMs}ms / 生存時間: ${config.ttlMs}ms / 同時上限: ${config.maxOnScreen}`;
+        tuningInfo.textContent = `出現間隔: ${config.spawnEveryMs}ms / 基本生存時間: ${config.ttlMs}ms / 同時上限: ${config.maxOnScreen}`;
       };
 
       const setOverlayState = (state) => {
@@ -602,6 +753,9 @@
           soil.element.remove();
         });
         soils.clear();
+        dragState.id = null;
+        dragState.pointerId = null;
+        basket.classList.remove("basket-active");
       };
 
       const readSettings = () => {
@@ -633,18 +787,19 @@
         const el = entry.element;
         el.disabled = true;
         el.style.pointerEvents = "none";
+        if (dragState.id === id) {
+          dragState.id = null;
+          dragState.pointerId = null;
+          basket.classList.remove("basket-active");
+        }
         el.classList.add(reason === "picked" ? "soil-picked" : "soil-missed");
         const delay = reason === "picked" ? 180 : 220;
         setTimeout(() => el.remove(), delay);
       };
 
-      const pickSoil = (id) => {
-        if (!running) return;
-        const entry = soils.get(id);
-        if (!entry) return;
-        score += 1;
+      const addScore = (points) => {
+        score += points;
         updateScoreDisplay();
-        removeSoil(id, "picked");
       };
 
       const getFieldBounds = () => {
@@ -654,38 +809,119 @@
         return parentRect ?? rect;
       };
 
+      const pickWeighted = (items) => {
+        const total = items.reduce((sum, item) => sum + item.weight, 0);
+        let roll = Math.random() * total;
+        for (const item of items) {
+          roll -= item.weight;
+          if (roll <= 0) return item;
+        }
+        return items[items.length - 1];
+      };
+
+      const isInBasket = (soilRect, basketRect) => {
+        const centerX = soilRect.left + soilRect.width / 2;
+        const centerY = soilRect.top + soilRect.height / 2;
+        return (
+          centerX >= basketRect.left &&
+          centerX <= basketRect.right &&
+          centerY >= basketRect.top &&
+          centerY <= basketRect.bottom
+        );
+      };
+
+      const updateBasketHighlight = (pointerX, pointerY) => {
+        const rect = basket.getBoundingClientRect();
+        if (pointerX >= rect.left && pointerX <= rect.right && pointerY >= rect.top && pointerY <= rect.bottom) {
+          basket.classList.add("basket-active");
+        } else {
+          basket.classList.remove("basket-active");
+        }
+      };
+
       const spawnSoil = () => {
         if (!running) return;
         if (soils.size >= config.maxOnScreen) return;
         const rect = getFieldBounds();
-        const size = clampNumber(Math.round(44 + Math.random() * 34), 44, 78);
+        const size = clampNumber(Math.round(46 + Math.random() * 34), 46, 80);
         if (rect.width < size || rect.height < size) return;
         const maxX = Math.max(0, rect.width - size);
         const maxY = Math.max(0, rect.height - size);
         const x = Math.random() * maxX;
         const y = Math.random() * maxY;
+        const soilType = pickWeighted(soilTypes);
+        const ttlMs = Math.round(config.ttlMs * soilType.ttlFactor);
 
         const soil = document.createElement("button");
         soil.type = "button";
         soil.className = "soil";
         soil.style.setProperty("--size", `${size}px`);
+        soil.style.setProperty("--soil-light", soilType.colors.light);
+        soil.style.setProperty("--soil-mid", soilType.colors.mid);
+        soil.style.setProperty("--soil-dark", soilType.colors.dark);
         soil.style.left = `${x}px`;
         soil.style.top = `${y}px`;
-        soil.textContent = "土";
-        soil.setAttribute("aria-label", "土を拾う");
+        soil.textContent = "";
+        soil.setAttribute("aria-label", "土をドラッグ");
 
         const id = ++soilCounter;
-        const timeoutId = setTimeout(() => removeSoil(id, "missed"), config.ttlMs);
-        soils.set(id, { element: soil, timeoutId });
+        const timeoutId = setTimeout(() => removeSoil(id, "missed"), ttlMs);
+        soils.set(id, { element: soil, timeoutId, points: soilType.points, size });
 
         soil.addEventListener(
           "pointerdown",
           (event) => {
+            if (!running) return;
             event.preventDefault();
-            pickSoil(id);
+            const entry = soils.get(id);
+            if (entry) {
+              clearTimeout(entry.timeoutId);
+              entry.timeoutId = null;
+            }
+            soil.setPointerCapture(event.pointerId);
+            dragState.id = id;
+            dragState.pointerId = event.pointerId;
+            const rect = soil.getBoundingClientRect();
+            dragState.offsetX = event.clientX - rect.left;
+            dragState.offsetY = event.clientY - rect.top;
+            soil.classList.add("soil-dragging");
+            updateBasketHighlight(event.clientX, event.clientY);
           },
           { passive: false }
         );
+
+        soil.addEventListener(
+          "pointermove",
+          (event) => {
+            if (dragState.id !== id || dragState.pointerId !== event.pointerId) return;
+            const fieldRect = getFieldBounds();
+            const nextX = clampNumber(event.clientX - fieldRect.left - dragState.offsetX, 0, fieldRect.width - size);
+            const nextY = clampNumber(event.clientY - fieldRect.top - dragState.offsetY, 0, fieldRect.height - size);
+            soil.style.left = `${nextX}px`;
+            soil.style.top = `${nextY}px`;
+            updateBasketHighlight(event.clientX, event.clientY);
+          },
+          { passive: false }
+        );
+
+        const finishDrag = (event) => {
+          if (dragState.id !== id || dragState.pointerId !== event.pointerId) return;
+          soil.releasePointerCapture(event.pointerId);
+          soil.classList.remove("soil-dragging");
+          const basketRect = basket.getBoundingClientRect();
+          const soilRect = soil.getBoundingClientRect();
+          if (isInBasket(soilRect, basketRect)) {
+            addScore(soilType.points);
+            removeSoil(id, "picked");
+          } else {
+            basket.classList.remove("basket-active");
+          }
+          dragState.id = null;
+          dragState.pointerId = null;
+        };
+
+        soil.addEventListener("pointerup", finishDrag);
+        soil.addEventListener("pointercancel", finishDrag);
 
         field.appendChild(soil);
       };
